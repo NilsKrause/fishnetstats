@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,18 +18,139 @@ type Game struct {
 	Result      *Result      `json:"result,omitempty"`
 	Termination string       `json:"termination,omitempty"`
 	Format      *Timecontrol `json:"format,omitempty"`
+
+	Initialized bool `json:"initialized,omitempty"`
+}
+
+func getGameIdFromBody(body string) (Gameid, error) {
+	lines := strings.Split(body, "\n")
+	for _, line := range lines {
+		if len(line) <= 1 {
+			continue
+		}
+		if line[0] != '[' {
+			continue
+		}
+
+		line = strings.Trim(line, "[]")
+		s := strings.Split(line, " ")
+
+		value := strings.Trim(s[1], "\"")
+		if s[0] == "Site" {
+			elems := strings.Split(value, "/")
+			id := elems[len(elems)-1]
+			if len(id) != 8 {
+				return Gameid{}, errors.New("no valid gameid found")
+			}
+			return bToGid([]byte(id)), nil
+		}
+	}
+
+	return Gameid{}, errors.New("no gameid found")
+}
+
+func (g *Game) playerUpdated() {
+	if g.IsInitialized() {
+		stats.addGame(g)
+	}
 }
 
 func (g *Game) Initialize() {
-	Request(g)
+	if g.IsInitialized() {
+		return
+	}
+
+	if !g.Initialized {
+		Request(g)
+		return
+	}
+
+	if g.White != nil && !g.White.IsInitialized() {
+		g.White.Initialize()
+	} else if g.White == nil {
+		gs, err := json.Marshal(g)
+		if err != nil {
+			gs = []byte("[unknown]")
+		}
+		fmt.Printf("weirdly have a nil player object for white: %s", gs)
+	}
+
+	if !g.Black.IsInitialized() {
+		g.Black.Initialize()
+	} else if g.Black == nil {
+		gs, err := json.Marshal(g)
+		if err != nil {
+			gs = []byte("[unknown]")
+		}
+		fmt.Printf("weirdly have a nil player object for black: %s", gs)
+	}
 }
 
-func (g *Game) GetBody () io.Reader {
+func (g *Game) HasId(id interface{}) bool {
+	nid := id.([8]byte)
+
+	if g.Id == nid {
+		return true
+	}
+
+	return false
+}
+
+func (g *Game) GetType() GettableType {
+	return GameT
+}
+
+func (g *Game) IsInitialized() bool {
+	return g.Initialized && g.White != nil && g.White.IsInitialized() && g.Black != nil && g.Black.IsInitialized()
+}
+
+func (g *Game) GetBodyString() string {
+	return g.Id.String()
+}
+
+func (g *Game) GetBody() io.Reader {
 	return strings.NewReader(g.Id.String())
 }
 
-func (g *Game) GetUrl () string {
+func (g *Game) GetUrl() string {
 	return "https://lichess.org/games/export/_ids"
+}
+
+func (g *Game) ParseResponseBody(body string) {
+	lines := strings.Split(body, "\n")
+	for _, line := range lines {
+		if len(line) <= 1 {
+			continue
+		}
+		if line[0] != '[' {
+			continue
+		}
+
+		line = strings.Trim(line, "[]")
+		s := strings.Split(line, " ")
+
+		value := strings.Trim(s[1], "\"")
+		switch s[0] {
+		case "White":
+			g.White = NewPlayer(value, g)
+			g.White.Initialize()
+			break
+		case "Black":
+			g.Black = NewPlayer(value, g)
+			g.Black.Initialize()
+			break
+		case "Result":
+			g.Result = aToRes(value)
+			break
+		case "Termination":
+			g.Termination = value
+			break
+		case "TimeControl":
+			g.Format = aToTC(value)
+		}
+	}
+
+	g.Initialized = true
 }
 
 func (g *Game) ParseHttpResponse(r *http.Response) {
@@ -51,50 +173,7 @@ func (g *Game) ParseHttpResponse(r *http.Response) {
 		return
 	}
 
-	lines := strings.Split(string(b), "\n")
-	for _, line := range lines {
-		if len(line) <= 1 {
-			continue
-		}
-		if line[0] != '[' {
-			continue
-		}
-
-		line = strings.Trim(line, "[]")
-		s := strings.Split(line, " ")
-
-		value := strings.Trim(s[1], "\"")
-		switch s[0] {
-		case "White":
-			g.White = &Player{Name: PlayerName(value)}
-			g.White.Initialize()
-			fmt.Printf("White: %s ", g.White.Name)
-			break
-		case "Black":
-			g.Black = &Player{Name: PlayerName(value)}
-			g.Black.Initialize()
-			fmt.Printf("Black: %s ", g.Black.Name)
-			break
-		case "Result":
-			g.Result = aToRes(value)
-			fmt.Printf("Resul: %v ", g.Result)
-			break
-		case "Termination":
-			g.Termination = value
-			fmt.Printf("Termination: %s ", g.Termination)
-			break
-		case "TimeControl":
-			g.Format = aToTC(value)
-			fmt.Printf("Format: %d+%d ", g.Format.Seconds, g.Format.Bonus)
-		}
-	}
-
-	fmt.Printf("\n")
-
-	gb, err := json.Marshal(g)
-	if err == nil {
-		fmt.Printf("parsed game %s and got this data: %s\n", g.Id, string(gb))
-	}
+	g.ParseResponseBody(string(b))
 }
 
 func parseGameline(b []byte) *Game {
@@ -114,15 +193,11 @@ func parseGameline(b []byte) *Game {
 
 func (g *Game) ToByte() []byte {
 	b, err := json.Marshal(g)
-	if g.Id.String() == "iM76BKY1" {
-		fmt.Printf("MARSHALING :D")
-	}
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 
-	//fmt.Printf("Game %s to Bytes: %s\n", g.Id, string(b))
 	b = append([]byte(fmt.Sprintf("%s ", g.Id)), b...)
 
 	return b

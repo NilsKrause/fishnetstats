@@ -8,7 +8,7 @@ import (
 
 type PlayerElo map[Format]int
 
-func newPlayerElo () PlayerElo {
+func newPlayerElo() PlayerElo {
 	return make(map[Format]int)
 }
 
@@ -19,8 +19,9 @@ func (pe *PlayerElo) MarshalJSON() ([]byte, error) {
 		if i == len(*pe)-1 {
 			elos = fmt.Sprintf("%s{\"%s\": %d}", elos, format, elo)
 		} else {
-			elos = fmt.Sprintf("%s{\"%s\": %d}, ", elos, format, elo)
+			elos = fmt.Sprintf("%s{\"%s\": %d},", elos, format, elo)
 		}
+		i++
 	}
 	elos = fmt.Sprintf("%s] ", elos)
 
@@ -31,15 +32,20 @@ func (pe *PlayerElo) UnmarshalJSON(b []byte) error {
 	s := strings.Trim(string(b), "[]")
 	elos := strings.Split(s, ",")
 
+	*pe = newPlayerElo()
+
 	// {"blitz": "1234"}
 	for _, eloA := range elos {
-		ss := strings.Split(strings.Trim(eloA, "{}"), ": ")
+		trimed := strings.Trim(eloA, "{}")
+		ss := strings.Split(trimed, ":")
 		if len(ss) != 2 {
+			fmt.Printf("error while splitting string, got %d from %s\n", len(ss), eloA)
 			continue
 		}
-		i, err := strconv.Atoi(strings.Trim(ss[1], "\""))
+		elostr := strings.Trim(ss[1], "\"")
+		i, err := strconv.Atoi(elostr)
 		if err != nil {
-			fmt.Printf("error while unmarshelling player elo %s", err)
+			fmt.Printf("error while unmarshalling player elo %s\n", err)
 			continue
 		}
 		format := Format(strings.Trim(ss[0], "\""))

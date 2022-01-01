@@ -22,6 +22,7 @@ var syslogPath = "/var/log/syslog"
 var syslogOffset int64
 var signals chan os.Signal
 var games map[Gameid]*Game
+var players map[PlayerName]*Player
 
 func getHomeDir() {
 	usr, err := user.Current()
@@ -43,21 +44,14 @@ func saveGamesToFile() {
 	b := make([]byte, 0)
 	i := 0
 	for _, g := range games {
-		if g.Id.String() == "iM76BKY1" {
-			fmt.Printf("OK!!")
-		}
 		gb := g.ToByte()
 		if gb == nil || len(gb) <= 0 {
-			if g.Id.String() == "iM76BKY1" {
-				fmt.Printf("NOPE!!")
-			}
 			continue
 		}
 		b = append(b, gb...)
 		b = append(b, '\n')
 		i++
 	}
-	fmt.Printf("Iterated over %d games", i)
 	n, err := file.Write(b)
 	if err != nil {
 		panic(err)
@@ -97,9 +91,11 @@ func loadGamesFromFile() {
 
 		i++
 		addGame(g)
+		addPlayer(g.White)
+		addPlayer(g.Black)
 	}
 
-	fmt.Printf("Read %d lines..", i)
+	fmt.Printf("Read %d lines..\n", i)
 }
 
 func loadGamesFromFishnetLog() {
@@ -138,21 +134,27 @@ func aToGid(id string) Gameid {
 	return gid
 }
 
+func addPlayer(p *Player) {
+	if p == nil {
+		return
+	}
+	if _, ok := players[p.Name]; !ok {
+		p.Initialize()
+		players[p.Name] = p
+	}
+}
+
 func addGame(g *Game) {
 	if _, ok := games[g.Id]; !ok {
-		//fmt.Printf("added game from struct %s\n", g.Id)
+		g.Initialize()
+		stats.addGame(g)
 		games[g.Id] = g
 	}
 }
 
 func addGameFromId(idS string) {
 	id := aToGid(idS)
-	if _, ok := games[id]; !ok {
-		//fmt.Printf("added game %s\n", idS)
-		g := &Game{Id: id}
-		g.Initialize()
-		games[id] = g
-	}
+	addGame(&Game{Id: id})
 }
 
 func getGameId(line string) string {
@@ -231,7 +233,6 @@ func followLog() {
 		}
 	}()
 
-	//err = watcher.Add("/var/log/syslog")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -249,6 +250,7 @@ func waitForSigInt() {
 
 func init() {
 	games = make(map[Gameid]*Game)
+	players = make(map[PlayerName]*Player)
 	getHomeDir()
 
 	var err error
@@ -269,7 +271,10 @@ func init() {
 
 func main() {
 	loadGamesFromFile()
-	loadGamesFromFishnetLog()
+	//loadGamesFromFishnetLog()
+
+	api := NewApi()
+	api.Start(9090)
 
 	fmt.Printf("Loaded %d already analyzed games.\n", len(games))
 	followLog()
