@@ -40,7 +40,7 @@ func (f *FormatElo) UnmarshalJSON(b []byte) error {
 		}
 		i, err := strconv.Atoi(strings.Trim(ss[1], "\""))
 		if err != nil {
-			fmt.Printf("error while unmarshalling player elo %s", err)
+			fmt.Printf("error while unmarshalling player elo %s\n", err)
 			continue
 		}
 		format := Format(strings.Trim(ss[0], "\""))

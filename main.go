@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"io"
@@ -59,7 +60,7 @@ func saveGamesToFile() {
 	file.Close()
 
 	if n != len(b) {
-		fmt.Printf("wrote %d bytes but had %d bytes", n, len(b))
+		fmt.Printf("wrote %d bytes but had %d bytes\n", n, len(b))
 		return
 	}
 
@@ -212,6 +213,11 @@ func followLog() {
 
 		}
 	}(watcher)
+
+	err = watcher.Add(syslogPath)
+	if err != nil {
+		panic(errors.New("error while adding watcher to syslog"))
+	}
 
 	done := make(chan bool)
 	go func() {

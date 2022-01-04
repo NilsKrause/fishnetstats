@@ -231,7 +231,7 @@ func (l *lichessapi) handlePlayerRequests() {
 			continue
 		}
 
-		fmt.Printf("got %d new players", len(playerRes))
+		fmt.Printf("got %d new players\n", len(playerRes))
 
 		for _, pres := range playerRes {
 			if player, ok := players[PlayerName(pres.Username)]; ok {

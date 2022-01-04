@@ -72,7 +72,7 @@ func (g *Game) Initialize() {
 		if err != nil {
 			gs = []byte("[unknown]")
 		}
-		fmt.Printf("weirdly have a nil player object for white: %s", gs)
+		fmt.Printf("weirdly have a nil player object for white: %s\n", gs)
 	}
 
 	if !g.Black.IsInitialized() {
@@ -82,7 +82,7 @@ func (g *Game) Initialize() {
 		if err != nil {
 			gs = []byte("[unknown]")
 		}
-		fmt.Printf("weirdly have a nil player object for black: %s", gs)
+		fmt.Printf("weirdly have a nil player object for black: %s\n", gs)
 	}
 }
 
