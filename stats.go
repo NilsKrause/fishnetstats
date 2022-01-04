@@ -165,6 +165,9 @@ func (s *Stats) MarshalJSON() ([]byte, error) {
 	stats = append(stats, s.MarshalJSONElos()...)
 	stats = append(stats, ',')
 	stats = append(stats, s.MarshalJSONPlayers()...)
+	stats = append(stats, ',')
+	stats = append(stats, []byte(fmt.Sprintf("\"gamesCount\":%d", s.numberOfGames))...)
+	stats = append(stats, ',')
 	stats = append(stats, []byte{'}', ' '}...)
 
 	return stats, nil
