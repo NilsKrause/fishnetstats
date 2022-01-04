@@ -271,7 +271,7 @@ func init() {
 
 func main() {
 	loadGamesFromFile()
-	//loadGamesFromFishnetLog()
+	loadGamesFromFishnetLog()
 
 	api := NewApi()
 	api.Start(9090)
