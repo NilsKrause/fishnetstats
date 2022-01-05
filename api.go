@@ -50,7 +50,7 @@ func NewApi() Api {
 func (a *api) Start(port int) {
 	go func() {
 		if err := a.echo.Start(fmt.Sprintf(":%d", port)); err != nil && err != http.ErrServerClosed {
-			a.echo.Logger.Fatal("shutting down the server")
+			a.echo.Logger.Fatal("shutting down the server", err)
 		}
 	}()
 }

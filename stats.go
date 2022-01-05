@@ -40,7 +40,7 @@ func (s *Stats) MarshalJSONElos() []byte {
 	elos := "\"elos\":["
 	aelos := make([]string, 0)
 	for _, format := range formats {
-		elo := fmt.Sprintf("{\"%s\":{", format)
+		elo := fmt.Sprintf("{\"format\":\"%s\",\"data\":{", format)
 		h, hok := s.highestElo[format]
 		l, lok := s.lowestElo[format]
 		a, aok := s.averageElo[format]
