@@ -8,11 +8,13 @@ var stats *Stats
 
 func init() {
 	stats = &Stats{
-		gamesCount: make(map[Format]int),
-		eloSum:     NewFormatElo(),
-		averageElo: NewFormatElo(),
-		highestElo: NewFormatElo(),
-		lowestElo:  NewFormatElo(),
+		gamesCount:     make(map[Format]int),
+		eloSum:         NewFormatElo(),
+		averageElo:     NewFormatElo(),
+		highestElo:     NewFormatElo(),
+		highesEloGames: NewFormatGame(),
+		lowestElo:      NewFormatElo(),
+		lowestEloGames: NewFormatGame(),
 
 		titledPlayers: make(map[string]string),
 
@@ -27,9 +29,11 @@ type Stats struct {
 
 	eloPlayers map[string]byte
 
-	averageElo FormatElo
-	highestElo FormatElo
-	lowestElo  FormatElo
+	averageElo     FormatElo
+	highestElo     FormatElo
+	highesEloGames FormatGame
+	lowestElo      FormatElo
+	lowestEloGames FormatGame
 
 	titledPlayers map[string]string
 
@@ -42,7 +46,9 @@ func (s *Stats) MarshalJSONElos() []byte {
 	for _, format := range formats {
 		elo := fmt.Sprintf("{\"format\":\"%s\",\"data\":{", format)
 		h, hok := s.highestElo[format]
+		hg, hgok := s.highesEloGames[format]
 		l, lok := s.lowestElo[format]
+		lg, lgok := s.lowestEloGames[format]
 		a, aok := s.averageElo[format]
 
 		if !hok && !lok && !aok {
@@ -50,6 +56,9 @@ func (s *Stats) MarshalJSONElos() []byte {
 		}
 
 		if hok {
+			if hgok {
+				elo = fmt.Sprintf("%s\"highGame\":\"%s\",", elo, hg)
+			}
 			if lok || aok {
 				elo = fmt.Sprintf("%s\"high\":%d,", elo, h)
 			} else {
@@ -58,6 +67,9 @@ func (s *Stats) MarshalJSONElos() []byte {
 		}
 
 		if lok {
+			if lgok {
+				elo = fmt.Sprintf("%s\"lowGame\":%d,", elo, lg)
+			}
 			if aok {
 				elo = fmt.Sprintf("%s\"low\":%d,", elo, l)
 			} else {

@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"os/user"
 	"regexp"
+	"syscall"
 )
 
 var fishnetLineRegex *regexp.Regexp
@@ -271,7 +272,8 @@ func init() {
 	}
 
 	signals = make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
+	signal.Notify(signals, syscall.SIGINT)
+	signal.Notify(signals, syscall.SIGTERM)
 	waitForSigInt()
 }
 
