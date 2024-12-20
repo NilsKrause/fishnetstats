@@ -11,7 +11,7 @@ import (
 )
 
 type Config struct {
-	Location string
+	Location string `yaml:"location"`
 }
 
 type Watcher struct {

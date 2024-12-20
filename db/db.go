@@ -11,7 +11,7 @@ type Db struct {
 }
 
 type Config struct {
-	Location string
+	Location string `yaml:"location"`
 }
 
 func New(config *Config) *Db {

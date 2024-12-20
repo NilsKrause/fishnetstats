@@ -6,6 +6,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/joanlopez/go-lichess v0.0.0-20240705043934-e5d151696372
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.25.12
 )
 
