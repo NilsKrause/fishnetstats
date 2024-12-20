@@ -2,3 +2,7 @@
 fishnetstats
 .fishnet-games
 .DS_Store
+*.yaml
+.env
+data/*
+stats
