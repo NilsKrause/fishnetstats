@@ -1,0 +1,19 @@
+version: "3"
+services:
+  fishnet:
+    image: nilskrau/fishnet
+    restart: unless-stopped
+    environment:
+      - STATS_FILE=/data/.fishnet-stats
+      - KEY=${KEY}
+    volumes:
+      - ./data:/data
+  stats:
+    environment:
+      - CONFIG=/data/config.yaml
+    image: nilskrau/fishnetstats
+    restart: unless-stopped
+    depends_on:
+      - fishnet
+    volumes:
+      - ./data:/data
