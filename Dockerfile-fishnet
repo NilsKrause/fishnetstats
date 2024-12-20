@@ -1,0 +1,3 @@
+FROM niklasf/fishnet:latest
+COPY docker-entrypoint-fishnet.sh /docker-entrypoint-fishnet.sh
+CMD ["/docker-entrypoint-fishnet.sh"]

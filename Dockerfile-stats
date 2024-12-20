@@ -1,0 +1,5 @@
+FROM docker.io/alpine:3
+RUN apk --no-cache add bash
+COPY stats /stats
+COPY docker-entrypoint-stats.sh /docker-entrypoint.sh
+CMD ["/docker-entrypoint.sh"]
