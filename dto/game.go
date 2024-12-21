@@ -40,7 +40,7 @@ func LiGameToDto(game *lichess.Game) *Game {
 	}
 
 	if game.Players.Black.User != nil {
-		blackName = game.Players.White.User.Name
+		blackName = game.Players.Black.User.Name
 	}
 
 	return &Game{
