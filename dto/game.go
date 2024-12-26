@@ -7,15 +7,15 @@ import (
 
 type Game struct {
 	gorm.Model
-	Variant     string
-	Game        string
-	Fetched     bool
-	WhiteName   string
-	WhiteRating int
-	BlackName   string
-	BlackRating int
-	Opening     string
-	Speed       string
+	Variant     string `json:"variant"`
+	Game        string `json:"game"`
+	Fetched     bool   `json:"-"`
+	WhiteName   string `json:"whiteName"`
+	WhiteRating int    `json:"whiteRating"`
+	BlackName   string `json:"blackName"`
+	BlackRating int    `json:"blackRating"`
+	Opening     string `json:"opening"`
+	Speed       string `json:"speed"`
 }
 
 func getPtrValue[P int | string | lichess.GameOpening](val *P) P {
