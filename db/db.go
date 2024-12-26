@@ -177,11 +177,11 @@ func (db *Db) GetAverageRating() (int, error) {
 func (db *Db) GetLowestRatedGame() (*dto.Game, error) {
 	lowestWhiteGame := &dto.Game{}
 	lowestBlackGame := &dto.Game{}
-	if tx := db.db.Order("white_rating").First(lowestWhiteGame); tx.Error != nil {
+	if tx := db.db.Where("white_name <> ?", "").Order("white_rating").First(lowestWhiteGame); tx.Error != nil {
 		return nil, tx.Error
 	}
 
-	if tx := db.db.Order("black_rating").First(lowestBlackGame); tx.Error != nil {
+	if tx := db.db.Where("white_name <> ?", "").Order("black_rating").First(lowestBlackGame); tx.Error != nil {
 		return nil, tx.Error
 	}
 
